@@ -156,7 +156,7 @@ sentiment-recommendation/
    - GridSearchCV with stratified K-fold
    - Custom decision threshold (0.55) for precision-recall balance
 
-## 🎓 Learning Outcomes
+##  Learning Outcomes
 
 - End-to-end ML pipeline: data cleaning → EDA → feature engineering → modeling → deployment
 - Hybrid recommender system design
@@ -164,7 +164,7 @@ sentiment-recommendation/
 - Production ML: serialization, inference optimization
 - Business-aware model selection
 
-## 📝 Future Enhancements
+##  Future Enhancements
 
 - [ ] Matrix factorization (SVD/ALS) for better cold-start handling
 - [ ] BERT fine-tuning for contextual sentiment
@@ -172,15 +172,15 @@ sentiment-recommendation/
 - [ ] A/B testing framework
 - [ ] Explainable AI: LIME/SHAP for recommendation transparency
 
-## 👤 Author
+##  Author
 
 Created as part of an industry-grade ML capstone project.
 
-## 📄 License
+##  License
 
 This project is available under the MIT License.
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Dataset: Ebuss e-commerce platform
 - Inspiration: Hybrid recommendation systems in production at Amazon/Netflix
