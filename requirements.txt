@@ -7,3 +7,16 @@ scipy>=1.7.0
 nltk>=3.6.0
 jupyter>=1.0.0
 notebook>=6.4.0
+
+# Optional: Transformer-based sentiment models (Section G2)
+# Uncomment to enable DistilBERT, RoBERTa, BERT experiments
+# GPU highly recommended for training (100x faster than CPU)
+# transformers>=4.30.0
+# torch>=2.0.0
+# datasets>=2.12.0
+# accelerate>=0.20.0
+
+# Optional: Neural Collaborative Filtering (Section H3.3)
+# Uncomment to enable NCF recommender
+# Note: torch is shared with transformers above
+# torch>=2.0.0
