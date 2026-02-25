@@ -40,6 +40,7 @@ wheels/
 # Model artifacts
 # pickle/
 # *.pkl
+results_distilbert-base-uncased/
 
 # OS
 .DS_Store
