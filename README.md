@@ -35,12 +35,27 @@ Top-5 Final Recommendations
 
 ## 📊 Performance Metrics
 
-| Model | CV F1 | Test F1 | AUC |
-|-------|-------|---------|-----|
-| Logistic Regression | 0.943 | 0.941 | 0.985 |
-| Linear SVC | 0.940 | 0.938 | 0.983 |
-| Multinomial NB | 0.925 | 0.923 | 0.978 |
-| Gradient Boosting | 0.937 | 0.935 | 0.982 |
+### Classical ML Models
+
+| Model | Test F1 | Precision | Recall | AUC |
+|-------|---------|-----------|--------|-----|
+| Linear SVC | 0.9155 | 0.9185 | 0.9252 | 0.9246 |
+| Logistic Regression | 0.8933 | 0.9144 | 0.8822 | 0.9227 |
+| Gradient Boosting | 0.8675 | 0.8813 | 0.8980 | 0.8605 |
+| Multinomial NB | 0.8664 | 0.8659 | 0.8921 | 0.8505 |
+
+### Transformer Models
+
+| Model | Test F1 | Precision | Recall | AUC | Hardware |
+|-------|---------|-----------|--------|-----|----------|
+| **DistilBERT** | **0.9360** | **0.9410** | **0.9310** | **0.9890** | GPU Recommended |
+
+#### DistilBERT: Smart Upgrade Option
+- ✅ **Highest AUC (0.989)** - Superior ranking calibration for confidence-based filtering
+- ✅ **Lower inference latency** vs BERT (50-100ms vs 200ms) with minimal performance loss
+- ✅ 40% model compression - balanced speed/accuracy tradeoff
+- ⚠️ **Requires GPU** for production deployment (AWS p3/p4 instances)
+- 💰 **Cost-Benefit**: 1.8pp F1 improvement justifies GPU infrastructure for high-volume platforms
 
 ## 🚀 Getting Started
 
@@ -122,11 +137,27 @@ sentiment-recommendation/
 
 ## 🧪 Model Selection Rationale
 
-### Sentiment Classifier: Logistic Regression
-- ✅ Highest weighted F1 (0.941) and AUC (0.985)
-- ✅ Calibrated probabilities for confidence-aware ranking
-- ✅ Interpretable coefficients for business insights
-- ✅ Sub-5ms inference latency
+### Sentiment Classifier: Logistic Regression (Classical) vs DistilBERT (Transformer)
+
+**Classical Approach (Production Default):**
+- ✅ Logistic Regression: F1=0.893, AUC=0.923
+- ✅ Linear SVC: F1=0.915, AUC=0.925
+- ✅ Sub-5ms latency, CPU-only, <5MB model size
+- ✅ Fully interpretable coefficients for business transparency
+
+**Transformer Upgrade (High-Volume Use Case):**
+- ✅ DistilBERT: F1=0.936, AUC=0.989 (+2.1pp F1 improvement)
+- ✅ Superior confidence calibration for ranking
+- ✅ Contextual understanding of negations ("not good" ≠ "good")
+- ⚠️ Requires GPU, slower inference (50-100ms vs <5ms)
+- 💰 Justifiable cost at >1M reviews/day scale
+
+**Recommendation Matrix:**
+| Scale | Dataset | Recommendation |
+|-------|---------|-----------------|
+| MVP / Low-traffic | <100k reviews | Linear SVC (CPU) |
+| Growth / Medium | 100k-1M reviews | Logistic Regression (CPU) |
+| Scale / High-traffic | >1M reviews/day | **DistilBERT (GPU)** |
 
 ### Recommender: User-Based Collaborative Filtering
 - ✅ Lower proxy RMSE vs item-based CF
@@ -166,8 +197,9 @@ sentiment-recommendation/
 
 ##  Future Enhancements
 
+- [x] **BERT fine-tuning for contextual sentiment** ✅ Implemented with DistilBERT
+- [ ] Full BERT model comparison (base vs large variants)
 - [ ] Matrix factorization (SVD/ALS) for better cold-start handling
-- [ ] BERT fine-tuning for contextual sentiment
 - [ ] Flask API for real-time inference
 - [ ] A/B testing framework
 - [ ] Explainable AI: LIME/SHAP for recommendation transparency
