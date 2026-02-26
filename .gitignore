@@ -41,6 +41,8 @@ wheels/
 # pickle/
 # *.pkl
 results_distilbert-base-uncased/
+*.pt
+*.safetensors
 
 # OS
 .DS_Store
