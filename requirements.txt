@@ -1,24 +1,5 @@
-numpy>=1.21.0
-pandas>=1.3.0
-matplotlib>=3.4.0
-seaborn>=0.11.0
-scikit-learn>=1.0.0
-scipy>=1.7.0
-nltk>=3.6.0
-Flask>=3.0.0
-flask-cors>=4.0.0
-jupyter>=1.0.0
-notebook>=6.4.0
-
-# Optional: Transformer-based sentiment models (Section G2)
-# Uncomment to enable DistilBERT, RoBERTa, BERT experiments
-# GPU highly recommended for training (100x faster than CPU)
-# transformers>=4.30.0
-# torch>=2.0.0
-# datasets>=2.12.0
-# accelerate>=0.20.0
-
-# Optional: Neural Collaborative Filtering (Section H3.3)
-# Uncomment to enable NCF recommender
-# Note: torch is shared with transformers above
-# torch>=2.0.0
+Flask==3.0.0
+flask-cors==4.0.0
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.0
