@@ -11,6 +11,7 @@ import os
 import pickle
 import re
 import string
+import sys
 import urllib.request
 import shutil
 import numpy as np
@@ -67,6 +68,17 @@ def download_large_file(filename: str, url: str, dest_dir: str) -> bool:
 
 SENTIMENT_THRESHOLD = 0.5  # Probability threshold for positive sentiment
 RECOMMENDATION_TOP_N = 5   # Number of recommendations to return
+
+
+class PopularityRecommender:
+    """Fallback recommender used when collaborative filtering model fails to load."""
+
+    def __init__(self, reviews_df: pd.DataFrame):
+        self.user_index = {}
+        self._top_products = reviews_df['name'].value_counts().index.tolist()
+
+    def recommend(self, username: str, n: int = 20) -> list:
+        return self._top_products[:n]
 
 # ============================================================
 # TEXT PREPROCESSING
@@ -169,7 +181,6 @@ class SentimentRecommenderSystem:
         required_files = {
             'tfidf_vectorizer.pkl': 'TF-IDF Vectorizer',
             'sentiment_model.pkl': 'Sentiment Classifier',
-            'user_based_cf.pkl': 'Collaborative Filter',
             'master_reviews.pkl': 'Review Database'
         }
         
@@ -196,20 +207,36 @@ class SentimentRecommenderSystem:
         self.sentiment_model = self._load_pickle('sentiment_model.pkl')
         print("  ✓ Sentiment Classifier loaded")
         
-        self.recommender = self._load_pickle('user_based_cf.pkl')
-        print("  ✓ Recommender loaded")
-        
         self.reviews_df = self._load_pickle('master_reviews.pkl')
         print("  ✓ Review Database loaded")
+
+        try:
+            self.recommender = self._load_pickle('user_based_cf.pkl')
+            print("  ✓ Recommender loaded")
+        except Exception as exc:
+            print(f"  ⚠ Recommender load failed, using popularity fallback: {exc}")
+            self.recommender = PopularityRecommender(self.reviews_df)
         
         print(f"System ready. Dataset: {len(self.reviews_df)} reviews, {self.reviews_df['name'].nunique()} products")
     
     @staticmethod
     def _load_pickle(fname: str) -> object:
-        """Load a pickle file from disk."""
+        """Load a pickle file from disk with NumPy compatibility fallback."""
         fpath = os.path.join(PICKLE_DIR, fname)
         with open(fpath, 'rb') as f:
-            return pickle.load(f)
+            try:
+                return pickle.load(f)
+            except ModuleNotFoundError as exc:
+                if "numpy._core" not in str(exc):
+                    raise
+
+                if 'numpy._core' not in sys.modules:
+                    sys.modules['numpy._core'] = np.core
+                if 'numpy._core.multiarray' not in sys.modules and hasattr(np.core, 'multiarray'):
+                    sys.modules['numpy._core.multiarray'] = np.core.multiarray
+
+                f.seek(0)
+                return pickle.load(f)
     
     # ========================================================
     # SENTIMENT PREDICTION
