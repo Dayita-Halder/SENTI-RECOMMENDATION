@@ -45,6 +45,15 @@ FALLBACK_STOPWORDS = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 't
 
 PICKLE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pickle')
 
+# GitHub Release URL for large model files
+GITHUB_RELEASE_BASE = "https://github.com/Dayita-Halder/SENTI-RECOMMENDATION/releases/download/v1.0"
+
+# Large files to download from GitHub (>10MB)
+LARGE_FILES = {
+    'user_based_cf.pkl': f"{GITHUB_RELEASE_BASE}/user_based_cf.pkl",
+    'master_reviews.pkl': f"{GITHUB_RELEASE_BASE}/master_reviews.pkl"
+}
+
 SENTIMENT_THRESHOLD = 0.5  # Probability threshold for positive sentiment
 RECOMMENDATION_TOP_N = 5   # Number of recommendations to return
 
@@ -115,6 +124,40 @@ def preprocess_text(text: str) -> str:
 # MODEL LOADING
 # ============================================================
 
+def download_large_file(filename: str, url: str, dest_dir: str) -> bool:
+    """
+    Download a large file from GitHub Release if not already present.
+    
+    Args:
+        filename: Name of the file
+        url: Download URL
+        dest_dir: Destination directory
+        
+    Returns:
+        True if file is available (already exists or downloaded successfully)
+    """
+    import urllib.request
+    import shutil
+    
+    dest_path = os.path.join(dest_dir, filename)
+    
+    # File already exists
+    if os.path.exists(dest_path):
+        return True
+    
+    # Try to download
+    try:
+        print(f"Downloading {filename} from GitHub Release...")
+        with urllib.request.urlopen(url) as response:
+            with open(dest_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+        print(f"  ✓ Downloaded {filename}")
+        return True
+    except Exception as e:
+        print(f"  ✗ Failed to download {filename}: {e}")
+        return False
+
+
 class SentimentRecommenderSystem:
     """
     Complete sentiment classification and recommendation system.
@@ -141,6 +184,10 @@ class SentimentRecommenderSystem:
     
     def _load_artifacts(self):
         """Load all pickle files from disk."""
+        
+        # Download large files from GitHub Release if needed
+        for filename, url in LARGE_FILES.items():
+            download_large_file(filename, url, self.pickle_dir)
         
         # Required files
         required_files = {
