@@ -38,6 +38,33 @@ FALLBACK_STOPWORDS = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 't
 # ============================================================
 
 PICKLE_DIR = os.path.dirname(os.path.abspath(__file__))
+GITHUB_RELEASE_BASE = "https://github.com/Dayita-Halder/SENTI-RECOMMENDATION/releases/download/v1.0"
+
+# Large files hosted on GitHub Release (not in repo)
+LARGE_FILES = {
+    'user_based_cf.pkl': f"{GITHUB_RELEASE_BASE}/user_based_cf.pkl",
+    'master_reviews.pkl': f"{GITHUB_RELEASE_BASE}/master_reviews.pkl"
+}
+
+def download_large_file(filename: str, url: str, dest_dir: str) -> bool:
+    """Download large file from GitHub Release if needed."""
+    import urllib.request
+    import shutil
+    
+    dest_path = os.path.join(dest_dir, filename)
+    if os.path.exists(dest_path):
+        return True
+    
+    try:
+        print(f"Downloading {filename}...")
+        with urllib.request.urlopen(url, timeout=30) as response:
+            with open(dest_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+        print(f"  ✓ {filename}")
+        return True
+    except Exception as e:
+        print(f"  ✗ Failed to download {filename}: {e}")
+        return False
 
 SENTIMENT_THRESHOLD = 0.5  # Probability threshold for positive sentiment
 RECOMMENDATION_TOP_N = 5   # Number of recommendations to return
@@ -134,6 +161,10 @@ class SentimentRecommenderSystem:
     
     def _load_artifacts(self):
         """Load all pickle files from disk."""
+        
+        # Try to download large files from GitHub Release
+        for filename, url in LARGE_FILES.items():
+            download_large_file(filename, url, self.pickle_dir)
         
         # Required files
         required_files = {

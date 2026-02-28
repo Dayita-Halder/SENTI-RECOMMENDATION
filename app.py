@@ -104,10 +104,11 @@ def api_predict_sentiment():
             return jsonify({'error': 'Review text too long (max 5000 chars)', 'success': False}), 400
         
         # Predict
-        if system is None:
-            return jsonify({'error': 'System not initialized', 'success': False}), 500
+        sys = get_or_init_system()
+        if sys is None:
+            return jsonify({'error': 'System initializing, please retry', 'success': False}), 503
         
-        result = system.predict_sentiment(review_text)
+        result = sys.predict_sentiment(review_text)
         result['success'] = True
         
         return jsonify(result), 200
@@ -166,10 +167,11 @@ def api_recommend_products():
             n = 5
         
         # Generate recommendations
-        if system is None:
-            return jsonify({'error': 'System not initialized', 'success': False}), 500
+        sys = get_or_init_system()
+        if sys is None:
+            return jsonify({'error': 'System initializing, please retry', 'success': False}), 503
         
-        result = system.recommend_products(username, n=n)
+        result = sys.recommend_products(username, n=n)
         result['success'] = True
         
         return jsonify(result), 200
@@ -240,10 +242,11 @@ def api_predict_and_recommend():
             n = 5
         
         # Complete pipeline
-        if system is None:
-            return jsonify({'error': 'System not initialized', 'success': False}), 500
+        sys = get_or_init_system()
+        if sys is None:
+            return jsonify({'error': 'System initializing, please retry', 'success': False}), 503
         
-        result = system.predict_and_recommend(username, review_text, n_recommendations=n)
+        result = sys.predict_and_recommend(username, review_text, n_recommendations=n)
         result['success'] = True
         
         return jsonify(result), 200
@@ -256,28 +259,23 @@ def api_predict_and_recommend():
         }), 500
 
 
-@app.route('/api/health', methods=['GET'])
-def api_health():
-    """Health check endpoint."""
+@app.route('/health')
+def health():
+    """Simple health check (doesn't load models)."""
+    return jsonify({'status': 'healthy', 'service': 'sentiment-recommender'}), 200
+
+
+@app.route('/api/status')
+def api_status():
+    """API status check with model info."""
     try:
-        if system is None:
-            return jsonify({'status': 'error', 'message': 'System not initialized'}), 500
-        
-        # Quick test
-        test_result = system.predict_sentiment("test")
-        
+        sys = get_or_init_system()
         return jsonify({
-            'status': 'healthy',
-            'message': 'Sentiment/Recommendation system is operational',
-            'system_ready': True
-        }), 200
-    
+            'status': 'healthy' if sys else 'initializing',
+            'models_loaded': sys is not None
+        }), 200 if sys else 202
     except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e),
-            'system_ready': False
-        }), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 # ============================================================
