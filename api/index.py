@@ -7,6 +7,8 @@ Flask-based API for Vercel deployment.
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -23,14 +25,17 @@ CORS(app)
 
 # Global system instance
 system = None
+system_init_error = None
 
 def get_or_create_system():
     """Get or initialize the ML system."""
-    global system
+    global system, system_init_error
     if system is None and SYSTEM_AVAILABLE:
         try:
             system = get_system()
+            system_init_error = None
         except Exception as e:
+            system_init_error = str(e)
             print(f"Error initializing system: {e}")
             return None
     return system
@@ -42,8 +47,9 @@ def health():
     return jsonify({
         'status': 'healthy' if sys_instance else 'unhealthy',
         'system_available': SYSTEM_AVAILABLE,
-        'system_loaded': sys_instance is not None
-    })
+        'system_loaded': sys_instance is not None,
+        'init_error': system_init_error
+    }), (200 if sys_instance else 500)
 
 @app.route('/predict', methods=['POST'])
 def predict():
