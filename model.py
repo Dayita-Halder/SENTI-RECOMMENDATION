@@ -39,7 +39,7 @@ FALLBACK_STOPWORDS = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 't
 # GLOBAL CONFIGURATION
 # ============================================================
 
-PICKLE_DIR = os.path.dirname(os.path.abspath(__file__))
+PICKLE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pickle')
 GITHUB_RELEASE_BASE = "https://github.com/Dayita-Halder/SENTI-RECOMMENDATION/releases/download/v1.0"
 
 # Large files hosted on GitHub Release (not in repo)

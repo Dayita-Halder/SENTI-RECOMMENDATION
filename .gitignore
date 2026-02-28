@@ -38,12 +38,15 @@ wheels/
 # *.csv
 
 # Model artifacts
-# pickle/
-# *.pkl
-# Large pickle files hosted on GitHub Release
-api/pickle/user_based_cf.pkl
-api/pickle/master_reviews.pkl
+# Large pickle files hosted on GitHub Release (78MB user_based_cf.pkl)
+pickle/user_based_cf.pkl
 
+# Keep small pickle files in repo
+# pickle/sentiment_model.pkl (0.23MB)
+# pickle/tfidf_vectorizer.pkl (1.14MB)
+# pickle/master_reviews.pkl (6.47MB)
+
+# Ignore training results
 results_distilbert-base-uncased/
 *.pt
 *.safetensors
