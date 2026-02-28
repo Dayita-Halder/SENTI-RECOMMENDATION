@@ -221,22 +221,33 @@ class SentimentRecommenderSystem:
     
     @staticmethod
     def _load_pickle(fname: str) -> object:
-        """Load a pickle file from disk with NumPy compatibility fallback."""
+        """Load a pickle file from disk with NumPy and scikit-learn compatibility fallback."""
         fpath = os.path.join(PICKLE_DIR, fname)
         with open(fpath, 'rb') as f:
             try:
                 return pickle.load(f)
-            except ModuleNotFoundError as exc:
-                if "numpy._core" not in str(exc):
-                    raise
-
-                if 'numpy._core' not in sys.modules:
-                    sys.modules['numpy._core'] = np.core
-                if 'numpy._core.multiarray' not in sys.modules and hasattr(np.core, 'multiarray'):
-                    sys.modules['numpy._core.multiarray'] = np.core.multiarray
-
-                f.seek(0)
-                return pickle.load(f)
+            except (ModuleNotFoundError, AttributeError) as exc:
+                # Fix numpy._core module alias
+                if "numpy._core" in str(exc):
+                    if 'numpy._core' not in sys.modules:
+                        sys.modules['numpy._core'] = np.core
+                    if 'numpy._core.multiarray' not in sys.modules and hasattr(np.core, 'multiarray'):
+                        sys.modules['numpy._core.multiarray'] = np.core.multiarray
+                    f.seek(0)
+                    obj = pickle.load(f)
+                    return obj
+                
+                # Fix sklearn model attributes (multi_class, etc.)
+                if "has no attribute 'multi_class'" in str(exc):
+                    f.seek(0)
+                    obj = pickle.load(f)
+                    # Patch missing sklearn attributes
+                    if hasattr(obj, '__dict__'):
+                        if 'multi_class' not in obj.__dict__:
+                            obj.multi_class = 'auto'  # Default for LogisticRegression
+                    return obj
+                
+                raise
     
     # ========================================================
     # SENTIMENT PREDICTION
