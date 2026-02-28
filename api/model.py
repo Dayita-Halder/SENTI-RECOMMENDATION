@@ -28,7 +28,7 @@ for resource in ['punkt', 'stopwords', 'wordnet', 'omw-1.4']:
 # GLOBAL CONFIGURATION
 # ============================================================
 
-PICKLE_DIR = os.path.dirname(os.path.abspath(__file__))
+PICKLE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pickle')
 
 SENTIMENT_THRESHOLD = 0.5  # Probability threshold for positive sentiment
 RECOMMENDATION_TOP_N = 5   # Number of recommendations to return
