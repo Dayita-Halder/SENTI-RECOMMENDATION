@@ -14,7 +14,24 @@ from flask import Flask, render_template, request, jsonify
 import os
 import sys
 import traceback
-from model import get_system, preprocess_text
+
+# Lazy imports - don't load model on module startup
+get_system = None
+preprocess_text = None
+
+def _lazy_load_model():
+    """Load model functions only when needed."""
+    global get_system, preprocess_text
+    if get_system is None:
+        try:
+            from model import get_system as gs, preprocess_text as pt
+            get_system = gs
+            preprocess_text = pt
+        except Exception as e:
+            print(f"ERROR loading model: {e}")
+            traceback.print_exc()
+            return False
+    return True
 
 # ============================================================
 # FLASK APPLICATION SETUP
@@ -44,12 +61,18 @@ def get_or_init_system():
         return system
     
     system_initialized = True
+    
+    # Load model functions first
+    if not _lazy_load_model():
+        return None
+    
     try:
         system = get_system()
         print("✓ Sentiment/Recommendation system initialized")
         return system
     except Exception as e:
         print(f"⚠ System initialization deferred (will retry on request): {e}")
+        traceback.print_exc()
         return None
 
 
@@ -306,8 +329,9 @@ def internal_error(error):
 
 @app.before_request
 def before_request():
-    """Initialize system on first request if needed."""
+    """Initialize model on first request if needed."""
     if request.path.startswith('/api/'):
+        _lazy_load_model()
         get_or_init_system()
 
 
