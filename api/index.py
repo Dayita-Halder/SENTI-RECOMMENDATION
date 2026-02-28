@@ -35,7 +35,7 @@ def get_or_create_system():
             return None
     return system
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/health', methods=['GET'])
 def health():
     """Health check endpoint."""
     sys_instance = get_or_create_system()
@@ -45,7 +45,7 @@ def health():
         'system_loaded': sys_instance is not None
     })
 
-@app.route('/api/predict', methods=['POST'])
+@app.route('/predict', methods=['POST'])
 def predict():
     """Predict sentiment for a review."""
     sys_instance = get_or_create_system()
@@ -68,7 +68,7 @@ def predict():
     except Exception as e:
         return jsonify({'error': f'Prediction error: {str(e)}', 'success': False}), 500
 
-@app.route('/api/recommend', methods=['POST'])
+@app.route('/recommend', methods=['POST'])
 def recommend():
     """Generate product recommendations."""
     sys_instance = get_or_create_system()
@@ -99,7 +99,7 @@ def recommend():
     except Exception as e:
         return jsonify({'error': f'Recommendation error: {str(e)}', 'success': False}), 500
 
-@app.route('/api/combined', methods=['POST'])
+@app.route('/combined', methods=['POST'])
 def combined():
     """Combined sentiment prediction and recommendations."""
     sys_instance = get_or_create_system()
