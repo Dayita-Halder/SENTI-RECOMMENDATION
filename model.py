@@ -11,6 +11,8 @@ import os
 import pickle
 import re
 import string
+import urllib.request
+import shutil
 import numpy as np
 import pandas as pd
 
@@ -48,9 +50,6 @@ LARGE_FILES = {
 
 def download_large_file(filename: str, url: str, dest_dir: str) -> bool:
     """Download large file from GitHub Release if needed."""
-    import urllib.request
-    import shutil
-    
     dest_path = os.path.join(dest_dir, filename)
     if os.path.exists(dest_path):
         return True
