@@ -1,22 +1,10 @@
 {
-  "builds": [
+  "buildCommand": "pip install -r requirements_vercel.txt",
+  "outputDirectory": "public",
+  "rewrites": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.html"
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
     }
   ]
 }
