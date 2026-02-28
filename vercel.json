@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "buildCommand": "python -m pip install -r requirements_vercel.txt",
+  "env": {
+    "PYTHONUNBUFFERED": "1"
+  },
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 30,
+      "memory": 512
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    }
+  ]
+}

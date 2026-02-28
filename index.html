@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment-Based Product Recommender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        .section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-size: 13px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-predict {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-predict:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        .btn-clear {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-clear:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+
+        .result-box.hidden {
+            display: none;
+        }
+
+        .result-box.success {
+            border-left-color: #28a745;
+            background: #f0fdf4;
+        }
+
+        .result-box.error {
+            border-left-color: #dc3545;
+            background: #fdf8f8;
+            color: #dc3545;
+        }
+
+        .sentiment-positive {
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        .sentiment-negative {
+            color: #dc3545;
+            font-weight: 700;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .recommendation {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .recommendation-stats {
+            font-size: 12px;
+            color: #777;
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .recommendations-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .loading::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        .info-panel {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #0c5aa0;
+            margin-top: 15px;
+        }
+
+        .info-panel strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        footer {
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            padding: 20px 30px;
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .error-detail {
+            font-size: 12px;
+            margin-top: 10px;
+            color: #666;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Sentiment-Based Product Recommender</h1>
+            <p>Analyze review sentiment and get personalized product recommendations</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Left Column: Input & Sentiment -->
+            <div class="section">
+                <h2>📝 Review Analysis</h2>
+
+                <div class="form-group">
+                    <label for="username">Your Username</label>
+                    <input type="text" id="username" placeholder="Enter your username">
+                </div>
+
+                <div class="form-group">
+                    <label for="review">Your Review</label>
+                    <textarea id="review" placeholder="Write your honest product review here..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-predict" onclick="analyzeReview()">Analyze</button>
+                    <button class="btn-clear" onclick="clearForm()">Clear</button>
+                </div>
+
+                <!-- Sentiment Result -->
+                <div id="sentimentResult" class="result-box hidden">
+                    <!-- Content will be inserted here -->
+                </div>
+
+                <div class="info-panel">
+                    <strong>💡 How it works:</strong>
+                    Enter your name and write a review. Our ML model will predict whether your sentiment is positive or negative using advanced NLP.
+                </div>
+            </div>
+
+            <!-- Right Column: Recommendations -->
+            <div class="section">
+                <h2>🎁 Recommended For You</h2>
+
+                <div id="recommendationStatus" class="empty-state">
+                    Analyze a review to see personalized recommendations
+                </div>
+
+                <div id="recommendationsList" class="recommendations-list hidden">
+                    <!-- Content will be inserted here -->
+                </div>
+
+                <div class="info-panel">
+                    <strong>📊 Recommendation Engine:</strong>
+                    Products are ranked by positive sentiment from real user reviews. We filter out products with deceiving high-ratings but negative feedback.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Sentiment-Based Recommendation System • Powered by Machine Learning</p>
+        </footer>
+    </div>
+
+    <script>
+        // ========================================================
+        // UTILITY FUNCTIONS
+        // ========================================================
+
+        function showLoading(elementId) {
+            document.getElementById(elementId).innerHTML = '<div class="loading">Processing</div>';
+            document.getElementById(elementId).classList.remove('hidden');
+        }
+
+        function clearForm() {
+            document.getElementById('username').value = '';
+            document.getElementById('review').value = '';
+            document.getElementById('sentimentResult').classList.add('hidden');
+            document.getElementById('recommendationsList').classList.add('hidden');
+            document.getElementById('recommendationStatus').textContent = 'Analyze a review to see personalized recommendations';
+        }
+
+        function showError(message) {
+            const errorBox = document.getElementById('sentimentResult');
+            errorBox.className = 'result-box error';
+            errorBox.innerHTML = `
+                <div>
+                    ❌ Error: ${message}
+                    <div class="error-detail">Please try again or check your input.</div>
+                </div>
+            `;
+            errorBox.classList.remove('hidden');
+        }
+
+        // ========================================================
+        // SENTIMENT ANALYSIS
+        // ========================================================
+
+        function analyzeReview() {
+            const username = document.getElementById('username').value.trim();
+            const review = document.getElementById('review').value.trim();
+
+            // Validation
+            if (!username) {
+                showError('Please enter your username');
+                return;
+            }
+            if (!review) {
+                showError('Please enter a review');
+                return;
+            }
+            if (review.length < 10) {
+                showError('Review must be at least 10 characters');
+                return;
+            }
+
+            // Call API
+            showLoading('sentimentResult');
+            showLoading('recommendationStatus');
+
+            fetch('/api/combined', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    review_text: review,
+                    n_recommendations: 5
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    showError(data.error || 'Unknown error');
+                    return;
+                }
+
+                // Display sentiment result
+                displaySentinentResult(data);
+
+                // Display recommendations
+                displayRecommendations(data.recommendations);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Network error. Is the server running?');
+            });
+        }
+
+        function displaySentinentResult(data) {
+            const resultBox = document.getElementById('sentimentResult');
+            const sentiment = data.sentiment;
+            const probability = (data.sentiment_probability * 100).toFixed(1);
+            const confidence = (data.sentiment_confidence * 100).toFixed(1);
+
+            const sentimentClass = sentiment === 'Positive' ? 'sentiment-positive' : 'sentiment-negative';
+            const icon = sentiment === 'Positive' ? '😊' : '😕';
+
+            const html = `
+                <div>
+                    <div style="font-size: 16px; margin-bottom: 10px;">
+                        ${icon} Your Sentiment: <span class="${sentimentClass}">${sentiment}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                        Confidence: ${confidence}%
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${confidence}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            resultBox.className = 'result-box success';
+            resultBox.innerHTML = html;
+            resultBox.classList.remove('hidden');
+        }
+
+        function displayRecommendations(recommendations) {
+            const listBox = document.getElementById('recommendationsList');
+            const statusBox = document.getElementById('recommendationStatus');
+
+            if (!recommendations || recommendations.length === 0) {
+                statusBox.textContent = 'No recommendations available. Try another review!';
+                listBox.classList.add('hidden');
+                return;
+            }
+
+            let html = '';
+            recommendations.forEach((rec, index) => {
+                const sentiment = (rec.sentiment_score * 100).toFixed(0);
+                html += `
+                    <div class="recommendation">
+                        <div class="recommendation-title">
+                            ${index + 1}. ${rec.product}
+                        </div>
+                        <div class="recommendation-stats">
+                            <span class="stat-badge">
+                                ⭐ Sentiment: <span class="stat-value">${sentiment}%</span>
+                            </span>
+                            <span class="stat-badge">
+                                📊 Reviews: <span class="stat-value">${rec.review_count}</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listBox.innerHTML = html;
+            statusBox.innerHTML = `<strong>Top ${recommendations.length} Personalized Recommendations:</strong>`;
+            statusBox.classList.remove('empty-state');
+            listBox.classList.remove('hidden');
+        }
+
+        // ========================================================
+        // EVENT LISTENERS
+        // ========================================================
+
+        document.getElementById('review').addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                analyzeReview();
+            }
+        });
+
+        // ========================================================
+        // INITIALIZATION
+        // ========================================================
+
+        window.addEventListener('load', function() {
+            console.log('✓ Page loaded. Ready for input.');
+        });
+    </script>
+</body>
+</html>
