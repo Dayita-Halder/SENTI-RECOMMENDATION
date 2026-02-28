@@ -40,6 +40,10 @@ wheels/
 # Model artifacts
 # pickle/
 # *.pkl
+# Large pickle files hosted on GitHub Release
+api/pickle/user_based_cf.pkl
+api/pickle/master_reviews.pkl
+
 results_distilbert-base-uncased/
 *.pt
 *.safetensors
