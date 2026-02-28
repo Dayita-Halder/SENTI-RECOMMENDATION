@@ -35,17 +35,22 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
 # ============================================================
 
 system = None
+system_initialized = False
 
-def initialize_system():
-    """Initialize the sentiment/recommendation system on startup."""
-    global system
+def get_or_init_system():
+    """Lazy-initialize system on first use."""
+    global system, system_initialized
+    if system_initialized:
+        return system
+    
+    system_initialized = True
     try:
         system = get_system()
         print("✓ Sentiment/Recommendation system initialized")
-        return True
+        return system
     except Exception as e:
-        print(f"❌ Failed to initialize system: {e}")
-        return False
+        print(f"⚠ System initialization deferred (will retry on request): {e}")
+        return None
 
 
 # ============================================================
@@ -304,27 +309,17 @@ def internal_error(error):
 @app.before_request
 def before_request():
     """Initialize system on first request if needed."""
-    global system
-    if system is None and request.path.startswith('/api/'):
-        initialize_system()
+    if request.path.startswith('/api/'):
+        get_or_init_system()
 
 
 if __name__ == '__main__':
-    # Initialize on startup
+    # Startup banner
     print("="*70)
     print("🚀 SENTIMENT-BASED RECOMMENDATION SYSTEM")
     print("="*70)
     print()
-    
-    print("Initializing system...")
-    if not initialize_system():
-        print("\n❌ Failed to initialize. Make sure all pickle files exist:")
-        print("   - tfidf_vectorizer.pkl")
-        print("   - sentiment_model.pkl")
-        print("   - user_based_cf.pkl")
-        print("   - master_reviews.pkl")
-        print("\nRun the Jupyter notebook first to generate these files.")
-        sys.exit(1)
+    print("System will initialize on first API request...")
     
     print("\n📡 Starting Flask server...")
     print("="*70)
@@ -339,8 +334,8 @@ if __name__ == '__main__':
     
     # Run Flask app
     app.run(
-        host='127.0.0.1',
-        port=5000,
-        debug=False,  # Set to True for development
+        host='0.0.0.0',  # Listen on all interfaces for containerized deployment
+        port=int(os.environ.get('PORT', 5000)),
+        debug=False,
         use_reloader=False
     )
