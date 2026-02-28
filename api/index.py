@@ -6,6 +6,7 @@ Flask-based API for Vercel deployment.
 
 import os
 import sys
+import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -15,9 +16,12 @@ from flask_cors import CORS
 try:
     from model import get_system
     SYSTEM_AVAILABLE = True
+    IMPORT_ERROR = None
 except Exception as e:
-    print(f"Warning: Could not import model: {e}")
     SYSTEM_AVAILABLE = False
+    IMPORT_ERROR = str(e)
+    print(f"Warning: Could not import model: {e}")
+    traceback.print_exc()
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -37,6 +41,7 @@ def get_or_create_system():
         except Exception as e:
             system_init_error = str(e)
             print(f"Error initializing system: {e}")
+            traceback.print_exc()
             return None
     return system
 
@@ -48,7 +53,8 @@ def health():
         'status': 'healthy' if sys_instance else 'unhealthy',
         'system_available': SYSTEM_AVAILABLE,
         'system_loaded': sys_instance is not None,
-        'init_error': system_init_error
+        'init_error': system_init_error,
+        'import_error': IMPORT_ERROR
     }), (200 if sys_instance else 500)
 
 @app.route('/predict', methods=['POST'])
@@ -138,4 +144,8 @@ def combined():
         result['success'] = True
         return jsonify(result)
     except Exception as e:
+        traceback.print_exc()
         return jsonify({'error': f'Error: {str(e)}', 'success': False}), 500
+
+# Export for Vercel
+handler = app
