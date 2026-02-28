@@ -13,16 +13,31 @@ import re
 import string
 import numpy as np
 import pandas as pd
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-import nltk
 
-# Download NLTK resources (run once)
-for resource in ['punkt', 'stopwords', 'wordnet', 'omw-1.4']:
+# Try to import NLTK (optional)
+NLTK_AVAILABLE = False
+try:
+    import nltk
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    
+    # Try to use NLTK data
     try:
-        nltk.download(resource, quiet=True)
+        stopwords.words('english')
+        NLTK_AVAILABLE = True
     except:
+        # NLTK data not available, use fallback
         pass
+except:
+    pass
+
+# Fallback stopwords if NLTK unavailable
+FALLBACK_STOPWORDS = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+                      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
+                      'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+                      'should', 'could', 'may', 'might', 'must', 'can', 'this', 'that',
+                      'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+                      'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'its', 'our'}
 
 # ============================================================
 # GLOBAL CONFIGURATION
@@ -47,7 +62,7 @@ def preprocess_text(text: str) -> str:
     3. Remove punctuation
     4. Tokenize
     5. Remove stopwords
-    6. Lemmatize
+    6. Lemmatize (if NLTK available)
     
     Args:
         text: Raw review text
@@ -72,18 +87,26 @@ def preprocess_text(text: str) -> str:
     text = re.sub(r'[^a-z0-9\s]', '', text)
     
     # Tokenize
-    try:
-        tokens = nltk.word_tokenize(text)
-    except:
-        tokens = text.split()
+    tokens = text.split()
     
     # Remove stopwords
-    stop_words = set(stopwords.words('english'))
+    if NLTK_AVAILABLE:
+        try:
+            stop_words = set(stopwords.words('english'))
+        except:
+            stop_words = FALLBACK_STOPWORDS
+    else:
+        stop_words = FALLBACK_STOPWORDS
+        
     tokens = [t for t in tokens if t not in stop_words and len(t) > 2]
     
     # Lemmatize
-    lemmatizer = WordNetLemmatizer()
-    tokens = [lemmatizer.lemmatize(t) for t in tokens]
+    if NLTK_AVAILABLE:
+        try:
+            lemmatizer = WordNetLemmatizer()
+            tokens = [lemmatizer.lemmatize(t) for t in tokens]
+        except:
+            pass  # Skip lemmatization if it fails
     
     return ' '.join(tokens)
 
