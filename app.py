@@ -53,10 +53,11 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
 
 system = None
 system_initialized = False
+system_init_error = None
 
 def get_or_init_system():
     """Lazy-initialize system on first use."""
-    global system, system_initialized
+    global system, system_initialized, system_init_error
     if system_initialized:
         return system
     
@@ -64,6 +65,7 @@ def get_or_init_system():
     
     # Load model functions first
     if not _lazy_load_model():
+        system_init_error = "Failed to load model module"
         return None
     
     try:
@@ -71,7 +73,8 @@ def get_or_init_system():
         print("✓ Sentiment/Recommendation system initialized")
         return system
     except Exception as e:
-        print(f"⚠ System initialization deferred (will retry on request): {e}")
+        system_init_error = str(e)
+        print(f"⚠ System initialization failed: {e}")
         traceback.print_exc()
         return None
 
@@ -299,6 +302,20 @@ def api_status():
         }), 200 if sys else 202
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/debug')
+def api_debug():
+    """Debug endpoint to show initialization errors."""
+    global system_init_error
+    import sys as sys_module
+    return jsonify({
+        'system_initialized': system_initialized,
+        'system_loaded': system is not None,
+        'init_error': system_init_error,
+        'python_version': sys_module.version,
+        'cwd': os.getcwd()
+    }), 200
 
 
 # ============================================================
