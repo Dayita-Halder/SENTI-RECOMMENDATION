@@ -1,17 +1,16 @@
-from http.server import BaseHTTPRequestHandler
 import json
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
-        response = {
+def handler(event, context):
+    """Vercel serverless function handler."""
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps({
             'status': 'ok',
-            'message': 'Basic Vercel Python endpoint working'
-        }
-        
-        self.wfile.write(json.dumps(response).encode())
-        return
+            'message': 'Vercel Python function working!',
+            'event_keys': list(event.keys()) if isinstance(event, dict) else str(type(event))
+        })
+    }
